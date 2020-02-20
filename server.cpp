@@ -6,13 +6,16 @@
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
-
+#include <fstream>
 #include <iostream>
 #include <sstream>
 
+
+//using namespace std;
 int
-main()
+main(int argc, char *argv[])
 {
+  int portnum = atoi(argv[1]);
   // create a socket using TCP IP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -26,7 +29,7 @@ main()
   // bind address to socket
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(40000);     // short, network byte order
+  addr.sin_port = htons(portnum);     // short, network byte order
   addr.sin_addr.s_addr = inet_addr("127.0.0.1");
   memset(addr.sin_zero, '\0', sizeof(addr.sin_zero));
 
@@ -56,23 +59,30 @@ main()
   std::cout << "Accept a connection from: " << ipstr << ":" <<
     ntohs(clientAddr.sin_port) << std::endl;
 
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
   // read/write data from/into the connection
+
+
   bool isEnd = false;
-  char buf[20] = {0};
+  char buf[1024] = {0};
   std::stringstream ss;
+  std::ofstream write("receive.file");
 
   while (!isEnd) {
     memset(buf, '\0', sizeof(buf));
 
-    if (recv(clientSockfd, buf, 20, 0) == -1) {
+    if (recv(clientSockfd, buf, 1024, 0) == -1) {
       perror("recv");
       return 5;
     }
 
-    ss << buf << std::endl;
-    std::cout << buf << std::endl;
+    //ss << buf << std::endl;
+    //std::cout << buf << std::endl;
+    write << buf << std::endl;
 
-    if (send(clientSockfd, buf, 20, 0) == -1) {
+    if (send(clientSockfd, buf, 1024, 0) == -1) {
       perror("send");
       return 6;
     }

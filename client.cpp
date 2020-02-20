@@ -9,10 +9,21 @@
 
 #include <iostream>
 #include <sstream>
+#include <ctype.h>
+#include <fstream>
+
+using namespace std;
+
+#define LENGTH 1024
 
 int
-main()
+main(int argc, char *argv[])
+  //argc counts so ./client asdf will return 2
+  //argv starts 0 1 2
+
+
 {
+  int portnum = atoi(argv[2]);
   // create a socket using TCP IP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -26,9 +37,10 @@ main()
   //   return 1;
   // }
 
+  // BIND ADDRESS TO SOCKET
   struct sockaddr_in serverAddr;
   serverAddr.sin_family = AF_INET;
-  serverAddr.sin_port = htons(40000);     // short, network byte order
+  serverAddr.sin_port = htons(portnum);     // short, network byte order
   serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
   memset(serverAddr.sin_zero, '\0', sizeof(serverAddr.sin_zero));
 
@@ -51,30 +63,38 @@ main()
     ntohs(clientAddr.sin_port) << std::endl;
 
 
-  // send/receive data to/from connection
+//before it reaches here, it sets upt the connection
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//SAMEPLE CODE
+// send/receive data to/from connection
   bool isEnd = false;
   std::string input;
-  char buf[20] = {0};
+  char buf[1024] = {0};
   std::stringstream ss;
-
+  std::ifstream read(argv[3]);
+  string line;
   while (!isEnd) {
     memset(buf, '\0', sizeof(buf));
 
-    std::cout << "send: ";
-    std::cin >> input;
-    if (send(sockfd, input.c_str(), input.size(), 0) == -1) {
+  //  std::cout << "send: ";
+  //  std::cin >> input;
+
+    getline(read, line);
+    if (send(sockfd, line.c_str(), line.size(), 0) == -1) {
       perror("send");
       return 4;
     }
 
 
-    if (recv(sockfd, buf, 20, 0) == -1) {
+    if (recv(sockfd, buf, 2014, 0) == -1) {
       perror("recv");
       return 5;
     }
-    ss << buf << std::endl;
-    std::cout << "echo: ";
-    std::cout << buf << std::endl;
+
+    //ss << buf << std::endl;
+    //std::cout << "echo: ";
+    //std::cout << buf << std::endl;
 
     if (ss.str() == "close\n")
       break;
@@ -82,6 +102,11 @@ main()
     ss.str("");
   }
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+
+  //close the socket
   close(sockfd);
 
   return 0;
