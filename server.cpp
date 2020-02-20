@@ -9,7 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
+#define LENGTH 1024
 
 //using namespace std;
 int
@@ -62,18 +62,16 @@ main(int argc, char *argv[])
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-  // read/write data from/into the connection
-
-
+  //read/write data from/into the connection
   bool isEnd = false;
-  char buf[1024] = {0};
+  char buf[LENGTH] = {0};
   std::stringstream ss;
-  std::ofstream write("receive.file");
+  std::ofstream write("receive.txt");
 
   while (!isEnd) {
     memset(buf, '\0', sizeof(buf));
 
-    if (recv(clientSockfd, buf, 1024, 0) == -1) {
+    if (recv(clientSockfd, buf, LENGTH, 0) == -1) {
       perror("recv");
       return 5;
     }
@@ -82,7 +80,7 @@ main(int argc, char *argv[])
     //std::cout << buf << std::endl;
     write << buf << std::endl;
 
-    if (send(clientSockfd, buf, 1024, 0) == -1) {
+    if (send(clientSockfd, buf, LENGTH, 0) == -1) {
       perror("send");
       return 6;
     }

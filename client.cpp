@@ -6,7 +6,6 @@
 #include <stdio.h>
 #include <errno.h>
 #include <unistd.h>
-
 #include <iostream>
 #include <sstream>
 #include <ctype.h>
@@ -70,24 +69,28 @@ main(int argc, char *argv[])
 // send/receive data to/from connection
   bool isEnd = false;
   std::string input;
-  char buf[1024] = {0};
+  char buf[LENGTH] = {0};
   std::stringstream ss;
   std::ifstream read(argv[3]);
   string line;
+
+
   while (!isEnd) {
     memset(buf, '\0', sizeof(buf));
 
   //  std::cout << "send: ";
   //  std::cin >> input;
 
-    getline(read, line);
+    getline(read, line); //read is the argv, and puts it the the line
+
+
+
+    //this actually sends the data, the contents in line is getting sent
     if (send(sockfd, line.c_str(), line.size(), 0) == -1) {
       perror("send");
       return 4;
     }
-
-
-    if (recv(sockfd, buf, 2014, 0) == -1) {
+    if (recv(sockfd, buf, LENGTH, 0) == -1) {
       perror("recv");
       return 5;
     }
