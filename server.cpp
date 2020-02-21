@@ -64,32 +64,31 @@ main(int argc, char *argv[])
 ////////////////////////////////////////////////////////////////////////////////
   //read/write data from/into the connection
   bool isEnd = false;
-  char buf[LENGTH] = {0};
-  std::stringstream ss;
-  std::ofstream write("receive.txt");
+  char buff[LENGTH];
+  std::ofstream writef("receive.txt", std::ios::binary);
 
   while (!isEnd) {
-    memset(buf, '\0', sizeof(buf));
+    //bzero(buf, LENGTH);
+    memset(buff, '\0', sizeof(buff)); //OVER HERE! IT KEEPS PUTTING \0 AFTER WE'RE DONE.
+                                    //SO WE HAVE TO SOMEHOW STOP IT FROM HAPPENING
 
-    if (recv(clientSockfd, buf, LENGTH, 0) == -1) {
+    if (recv(clientSockfd, buff, LENGTH, 0) == -1) {
       perror("recv");
       return 5;
     }
 
-    //ss << buf << std::endl;
-    //std::cout << buf << std::endl;
-    write << buf << std::endl;
+    //i made this line below to match the client and it somehow works?
+    //but the issue is that,
+    writef.write(buff, sizeof(buff));
+    //writef << buf << std::endl; //WRITES IT TO THE RECEIVE.TXT
 
-    if (send(clientSockfd, buf, LENGTH, 0) == -1) {
+    //IF I COMMENT THIS OUT IT KEEPS LOOPING AND PUTS \0 AT THE END
+    if (send(clientSockfd, buff, LENGTH, 0) == -1) {
       perror("send");
       return 6;
     }
 
-    if (ss.str() == "close\n")
-      break;
-
-    ss.str("");
-  }
+  }//END OF WHILE LOOP
 
   close(clientSockfd);
 

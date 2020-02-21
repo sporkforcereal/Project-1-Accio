@@ -20,7 +20,6 @@ main(int argc, char *argv[])
   //argc counts so ./client asdf will return 2
   //argv starts 0 1 2
 
-
 {
   int portnum = atoi(argv[2]);
   // create a socket using TCP IP
@@ -65,51 +64,48 @@ main(int argc, char *argv[])
 //before it reaches here, it sets upt the connection
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
-//SAMEPLE CODE
 // send/receive data to/from connection
   bool isEnd = false;
-  std::string input;
-  char buf[LENGTH] = {0};
-  std::stringstream ss;
-  std::ifstream read(argv[3]);
-  string line;
-
+  char buff[LENGTH];
+  std::ifstream readf(argv[3], std::ios::binary); //reads it as binary into readf
 
   while (!isEnd) {
-    memset(buf, '\0', sizeof(buf));
+    memset(buff, '\0', sizeof(buff));//resets the buffer to null
 
-  //  std::cout << "send: ";
-  //  std::cin >> input;
+  //readf is the argv, and puts it the the line
+  //instead of get line, we read in 1024 bytes in binary, and put it into the
+  //buffer, then we can send the data in the buffer.
 
-    getline(read, line); //read is the argv, and puts it the the line
+
+//1, load the buffer with 1024 bytes of data, and also keep track of where we are
+    readf.read(buff, sizeof(buff));
+
+
+//2, send the buffer here
+
+//IF NOTHING HAVE BEEN READ IN, THEN WE BREAK OUT OF LOOP
+    if (readf.gcount() == 0){
+      break;
+    }
 
 
 
     //this actually sends the data, the contents in line is getting sent
-    if (send(sockfd, line.c_str(), line.size(), 0) == -1) {
+    if (send(sockfd, buff, sizeof(buff), 0) == -1) {
       perror("send");
       return 4;
     }
-    if (recv(sockfd, buf, LENGTH, 0) == -1) {
+
+    if (recv(sockfd, buff, LENGTH, 0) == -1) {
       perror("recv");
       return 5;
     }
 
-    //ss << buf << std::endl;
-    //std::cout << "echo: ";
-    //std::cout << buf << std::endl;
-
-    if (ss.str() == "close\n")
-      break;
-
-    ss.str("");
-  }
+  }//END OF WHILE LOOP
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-
-  //close the socket
   close(sockfd);
 
   return 0;
