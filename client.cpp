@@ -96,10 +96,12 @@ main(int argc, char *argv[])
       return 4;
     }
 
+/*
     if (recv(sockfd, buff, LENGTH, 0) == -1) {
       perror("recv");
       return 5;
     }
+*/
 
   }//END OF WHILE LOOP
 

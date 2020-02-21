@@ -9,11 +9,24 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <sys/stat.h>
 #define LENGTH 1024
 
+//METHODS
+bool fileExists(const std::string& filename)
+{
+    struct stat buf;
+    if (stat(filename.c_str(), &buf) != -1)
+    {
+        return true;
+    }
+    return false;
+}
+
+
 //using namespace std;
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we're trying to save at
 {
   int portnum = atoi(argv[1]);
   // create a socket using TCP IP
@@ -65,31 +78,68 @@ main(int argc, char *argv[])
   //read/write data from/into the connection
   bool isEnd = false;
   char buff[LENGTH];
-  std::ofstream writef("receive.txt", std::ios::binary);
+
+//we have to make a directory from argv[2] first
+  std::string dirname = argv[2];
+
+  mkdir(dirname.c_str() + 1, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); //makes a directory from the command line
+
+//check if file exists or not, so start with 1, 2, .... if it dont exist, then make it
+//so check if it exists first
+  int i = 1;
+  bool stop = true;
+  std::string name = std::to_string(i); // which will be the number
+
+  std::string fullfile = dirname + "/" + name + ".file"; //makes it 1.file 2.file......
+
+  //std::ofstream *writef = nullptr;
+  while (stop){
+    if (!fileExists(fullfile)){//if the file doesnt exist, make that file, now we have to put that into the while loop
+      std::ofstream writef(fullfile.c_str() + 1, std::ios::binary);
+      stop = false;
+    }
+    else{
+        i++;
+        name = std::to_string(i);
+        fullfile = name + ".file";
+    }
+  }
+  i = 0;
+
+//how we have to put the directory from of the receive file.
+  std::ofstream writef(fullfile.c_str() + 1, std::ios::binary);
+
+
 
   while (!isEnd) {
     //bzero(buf, LENGTH);
     memset(buff, '\0', sizeof(buff)); //OVER HERE! IT KEEPS PUTTING \0 AFTER WE'RE DONE.
                                     //SO WE HAVE TO SOMEHOW STOP IT FROM HAPPENING
-
-    if (recv(clientSockfd, buff, LENGTH, 0) == -1) {
+                                    //returns 0 if clientj's socket closes
+    int result = recv(clientSockfd, buff, LENGTH, 0);
+    if (result == -1) {
       perror("recv");
       return 5;
     }
+    if (result == 0){
+      break;
+    }
 
-    //i made this line below to match the client and it somehow works?
-    //but the issue is that,
-    writef.write(buff, sizeof(buff));
-    //writef << buf << std::endl; //WRITES IT TO THE RECEIVE.TXT
+    writef.write(buff, sizeof(buff)); //seems like it works
 
+/*
     //IF I COMMENT THIS OUT IT KEEPS LOOPING AND PUTS \0 AT THE END
     if (send(clientSockfd, buff, LENGTH, 0) == -1) {
       perror("send");
       return 6;
     }
+*/
 
   }//END OF WHILE LOOP
-
+/*
+  (*writef).close();
+  delete writef;
+*/
   close(clientSockfd);
 
   return 0;
