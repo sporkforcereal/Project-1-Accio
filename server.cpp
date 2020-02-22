@@ -72,20 +72,15 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
   std::cout << "Accept a connection from: " << ipstr << ":" <<
     ntohs(clientAddr.sin_port) << std::endl;
 
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
   //read/write data from/into the connection
   bool isEnd = false;
   char buff[LENGTH];
 
-//we have to make a directory from argv[2] first
+  //we have to make a directory from argv[2] first
   std::string dirname = argv[2];
 
-  mkdir(dirname.c_str() + 1, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH); //makes a directory from the command line
+  mkdir(dirname.c_str() + 1, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
-//check if file exists or not, so start with 1, 2, .... if it dont exist, then make it
-//so check if it exists first
   int i = 1;
   bool stop = true;
   std::string name = std::to_string(i); // which will be the number
@@ -106,16 +101,13 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
   }
   i = 0;
 
-//how we have to put the directory from of the receive file.
+  //how we have to put the directory from of the receive file.
   std::ofstream writef(fullfile.c_str() + 1, std::ios::binary);
-
-
 
   while (!isEnd) {
     //bzero(buf, LENGTH);
-    memset(buff, '\0', sizeof(buff)); //OVER HERE! IT KEEPS PUTTING \0 AFTER WE'RE DONE.
-                                    //SO WE HAVE TO SOMEHOW STOP IT FROM HAPPENING
-                                    //returns 0 if clientj's socket closes
+    memset(buff, '\0', sizeof(buff));
+
     int result = recv(clientSockfd, buff, LENGTH, 0);
     if (result == -1) {
       perror("recv");
@@ -127,19 +119,8 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
 
     writef.write(buff, sizeof(buff)); //seems like it works
 
-/*
-    //IF I COMMENT THIS OUT IT KEEPS LOOPING AND PUTS \0 AT THE END
-    if (send(clientSockfd, buff, LENGTH, 0) == -1) {
-      perror("send");
-      return 6;
-    }
-*/
-
   }//END OF WHILE LOOP
-/*
-  (*writef).close();
-  delete writef;
-*/
+
   close(clientSockfd);
 
   return 0;

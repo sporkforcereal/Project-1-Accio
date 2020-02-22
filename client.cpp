@@ -17,23 +17,11 @@ using namespace std;
 
 int
 main(int argc, char *argv[])
-  //argc counts so ./client asdf will return 2
-  //argv starts 0 1 2
 
 {
   int portnum = atoi(argv[2]);
   // create a socket using TCP IP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
-  // struct sockaddr_in addr;
-  // addr.sin_family = AF_INET;
-  // addr.sin_port = htons(40001);     // short, network byte order
-  // addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-  // memset(addr.sin_zero, '\0', sizeof(addr.sin_zero));
-  // if (bind(sockfd, (struct sockaddr *)&addr, sizeof(addr)) == -1) {
-  //   perror("bind");
-  //   return 1;
-  // }
 
   // BIND ADDRESS TO SOCKET
   struct sockaddr_in serverAddr;
@@ -61,10 +49,6 @@ main(int argc, char *argv[])
     ntohs(clientAddr.sin_port) << std::endl;
 
 
-//before it reaches here, it sets upt the connection
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-// send/receive data to/from connection
   bool isEnd = false;
   char buff[LENGTH];
   std::ifstream readf(argv[3], std::ios::binary); //reads it as binary into readf
@@ -72,23 +56,12 @@ main(int argc, char *argv[])
   while (!isEnd) {
     memset(buff, '\0', sizeof(buff));//resets the buffer to null
 
-  //readf is the argv, and puts it the the line
-  //instead of get line, we read in 1024 bytes in binary, and put it into the
-  //buffer, then we can send the data in the buffer.
-
-
-//1, load the buffer with 1024 bytes of data, and also keep track of where we are
     readf.read(buff, sizeof(buff));
 
-
-//2, send the buffer here
-
-//IF NOTHING HAVE BEEN READ IN, THEN WE BREAK OUT OF LOOP
+    //IF NOTHING HAVE BEEN READ IN, THEN WE BREAK OUT OF LOOP
     if (readf.gcount() == 0){
       break;
     }
-
-
 
     //this actually sends the data, the contents in line is getting sent
     if (send(sockfd, buff, sizeof(buff), 0) == -1) {
@@ -96,17 +69,7 @@ main(int argc, char *argv[])
       return 4;
     }
 
-/*
-    if (recv(sockfd, buff, LENGTH, 0) == -1) {
-      perror("recv");
-      return 5;
-    }
-*/
-
-  }//END OF WHILE LOOP
-
-////////////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
+  }
 
   close(sockfd);
 
