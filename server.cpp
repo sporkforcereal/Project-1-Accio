@@ -14,14 +14,10 @@
 #define LENGTH 1024
 
 //METHODS
-bool fileExists(const std::string& filename)
-{
-    struct stat buf;
-    if (stat(filename.c_str(), &buf) != -1)
-    {
-        return true;
-    }
-    return false;
+//checks if the file exists
+bool fileExists (const std::string& name) {
+  struct stat buffer;
+  return (stat (name.c_str() + 1, &buffer) == 0);
 }
 
 
@@ -72,42 +68,48 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
   std::cout << "Accept a connection from: " << ipstr << ":" <<
     ntohs(clientAddr.sin_port) << std::endl;
 
+
+
   //read/write data from/into the connection
   bool isEnd = false;
   char buff[LENGTH];
 
-  //we have to make a directory from argv[2] first
-  std::string dirname = argv[2];
+  //we have to make a directory from argv[2] first, /save
+  std::string dirname = argv[2]; //takes in the /save
 
+  //makes a directory name save, not /save
   mkdir(dirname.c_str() + 1, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 
   int i = 1;
   bool stop = true;
   std::string name = std::to_string(i); // which will be the number
 
-  std::string fullfile = dirname + "/" + name + ".file"; //makes it 1.file 2.file......
+  //starts with 1.file
+  std::string halffile = name + ".file";
+  //    fullfile =          /save   /       1     .file
+  std::string fullfile = dirname + "/" + name + ".file"; //     /save/1.file
 
-  //std::ofstream *writef = nullptr;
+  //std::ofstream writef;
   while (stop){
-    if (!fileExists(fullfile)){//if the file doesnt exist, make that file, now we have to put that into the while loop
-      std::ofstream writef(fullfile.c_str() + 1, std::ios::binary);
-      stop = false;
+    if (!fileExists(fullfile)){//FOR SOME REASON IT DOESNT SEE THE EXIST
+      perror("IT DOESNT EXISTS");
+      //std::ofstream writef(fullfile.c_str() + 1, std::ios::binary); //creats the file
+      break;
     }
-    else{
+    else if (fileExists(fullfile)){//IF IT EXISTS ALREADY, INCREMENT THE COUNT AND RECHECK
+        perror("in da while loop!");
         i++;
         name = std::to_string(i);
-        fullfile = name + ".file";
+        fullfile = dirname + "/" + name + ".file";
     }
   }
-  i = 0;
+  i = 1;
 
   //how we have to put the directory from of the receive file.
   std::ofstream writef(fullfile.c_str() + 1, std::ios::binary);
 
   while (!isEnd) {
-    //bzero(buf, LENGTH);
     memset(buff, '\0', sizeof(buff));
-
     int result = recv(clientSockfd, buff, LENGTH, 0);
     if (result == -1) {
       perror("recv");
@@ -116,9 +118,7 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
     if (result == 0){
       break;
     }
-
     writef.write(buff, sizeof(buff)); //seems like it works
-
   }//END OF WHILE LOOP
 
   close(clientSockfd);
