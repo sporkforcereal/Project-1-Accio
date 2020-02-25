@@ -113,9 +113,20 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
   //makes the file to write our binary data into, writef
   std::ofstream writef(fullfile.c_str() + 1, std::ios::binary);
 
+
+  //char buf[LENGTH];
+
   while (!isEnd) {
+
     memset(buff, '\0', sizeof(buff));
+
+
+
     int result = recv(clientSockfd, buff, LENGTH, 0);
+
+    //char buff[result];
+    //recv(clientSockfd, buff, sizeof(buff), 0);
+
 
     if (result == -1) {
       perror("if result is -1");

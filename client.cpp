@@ -20,6 +20,7 @@ using namespace std;
 int
 main(int argc, char *argv[]){
 
+
   std::clock_t start;
   double duration;
   start = std::clock(); //guessing this starts the timer?
@@ -58,13 +59,20 @@ main(int argc, char *argv[]){
 
   bool isEnd = false;
   char buff[LENGTH];
+
   std::ifstream readf(argv[3], std::ios::binary); //reads it as binary into readf
 
   //so this while loop has to
   while (!isEnd) {
 
+    //make buffer size of the file
+    //char buff[sizeof(readf)];
+
+    std::cout << sizeof(buff);
+
     memset(buff, '\0', sizeof(buff));//resets the buffer to null
 
+    //
     readf.read(buff, sizeof(buff));
 
 
@@ -80,6 +88,7 @@ main(int argc, char *argv[]){
     }//IN THIS STATEMENT WE HAVE TO START THE TIMER!
 
   }
+  
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout<<"printf: "<< duration <<'\n';
   close(sockfd);
