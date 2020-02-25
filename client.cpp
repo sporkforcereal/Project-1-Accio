@@ -10,16 +10,23 @@
 #include <sstream>
 #include <ctype.h>
 #include <fstream>
-//
+
+#include <ctime>
+
 using namespace std;
 
 #define LENGTH 1024
 
 int
-main(int argc, char *argv[])
+main(int argc, char *argv[]){
 
-{
+  std::clock_t start;
+  double duration;
+  start = std::clock(); //guessing this starts the timer?
+
   int portnum = atoi(argv[2]);
+
+
   // create a socket using TCP IP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -53,10 +60,13 @@ main(int argc, char *argv[])
   char buff[LENGTH];
   std::ifstream readf(argv[3], std::ios::binary); //reads it as binary into readf
 
+  //so this while loop has to
   while (!isEnd) {
+
     memset(buff, '\0', sizeof(buff));//resets the buffer to null
 
     readf.read(buff, sizeof(buff));
+
 
     //IF NOTHING HAVE BEEN READ IN, THEN WE BREAK OUT OF LOOP
     if (readf.gcount() == 0){
@@ -67,10 +77,11 @@ main(int argc, char *argv[])
     if (send(sockfd, buff, sizeof(buff), 0) == -1) {
       perror("send");
       return 4;
-    }
+    }//IN THIS STATEMENT WE HAVE TO START THE TIMER!
 
   }
-
+  duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+  std::cout<<"printf: "<< duration <<'\n';
   close(sockfd);
 
   return 0;

@@ -12,6 +12,8 @@
 #include <string>
 #include <sys/stat.h>
 #define LENGTH 1024
+#include <thread>
+
 
 //METHODS
 //checks if the file exists
@@ -21,10 +23,12 @@ bool fileExists (const std::string& name) {
 }
 
 
-//using namespace std;
 int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we're trying to save at
 {
   int portnum = atoi(argv[1]);
+
+
+
   // create a socket using TCP IP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -82,6 +86,7 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
 
   int i = 1;
   bool stop = true;
+
   std::string name = std::to_string(i); // which will be the number
 
   //starts with 1.file
@@ -103,24 +108,34 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
         fullfile = dirname + "/" + name + ".file";
     }
   }
-  i = 1;
+  i++;
 
-  //how we have to put the directory from of the receive file.
+  //makes the file to write our binary data into, writef
   std::ofstream writef(fullfile.c_str() + 1, std::ios::binary);
 
   while (!isEnd) {
     memset(buff, '\0', sizeof(buff));
     int result = recv(clientSockfd, buff, LENGTH, 0);
+
     if (result == -1) {
-      perror("recv");
+      perror("if result is -1");
       return 5;
     }
-    if (result == 0){
+
+    else if (result == 0){
+      perror("if result is 0");
       break;
     }
-    writef.write(buff, sizeof(buff)); //seems like it works
+
+    //std::cout << result;
+
+    else{
+      writef.write(buff, sizeof(buff)); //this actually writes it out to the file
+    }//so after we get here, we have to keep it open and listen for new commands
+
   }//END OF WHILE LOOP
 
+  //if 10 seconds passed after the last transfer, then close
   close(clientSockfd);
 
   return 0;
