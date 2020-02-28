@@ -22,31 +22,6 @@ bool fileExists (const std::string& name) {
 }
 
 
-
-
-pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
-char buffy[1024];
-
-//METHOD WE ARE MAKING
-void * socketThread(void *arg){//have it accept argv[2]
-  int newSocket = *((int *)arg);
-  recv(newSocket, buffy, 1024, 0);
-
-  pthread_mutex_lock(&lock);
-
-
-
-
-
-
-
-  pthread_mutex_unlock(&lock);
-  close(newSocket);
-  pthread_exit(NULL);
-}
-
-
-
 int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we're trying to save at
 {
   int portnum = atoi(argv[1]);
@@ -89,13 +64,10 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
     return 4;
   }
 
+
   char ipstr[INET_ADDRSTRLEN] = {'\0'};
   inet_ntop(clientAddr.sin_family, &clientAddr.sin_addr, ipstr, sizeof(ipstr));
-  std::cout << "Accept a connection from: " << ipstr << ":" <<
-    ntohs(clientAddr.sin_port) << std::endl;
-
-////////////////////////////////////////////////////////////////////////////////
-
+  std::cout << "Accept a connection from: " << ipstr << ":" << ntohs(clientAddr.sin_port) << std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
   //read/write data from/into the connection
@@ -134,15 +106,16 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
   //this will write out to the file
   while (!isEnd) {
     memset(buff, '\0', sizeof(buff));
+
     int result = recv(clientSockfd, buff, LENGTH, 0);
 
     //error checking
     if (result == -1) {
-      perror("if result is -1");
+      //perror("if result is -1");
       return 5;
     }
     else if (result == 0){
-      perror("if result is 0");
+      //perror("if result is 0");
       break;
     }
 
@@ -151,7 +124,6 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
     int count = 0;
     for (int i = 0; i < 1024; i++){
       if (buff[i] == '\0'){
-        std::cout << "THE NULL CHARACTER IS IN HERE!";
         count = i;  //counts has the index where the null starts
         contains = true;
         break;
@@ -164,9 +136,11 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
       int i = 0;
       for (i = 0; i < count; i++){
         wbuff[i] = buff[i];
-        std::cout << wbuff[i];
       }
       writef.write(wbuff, sizeof(wbuff)); //this actually writes it out to the file
+      memset(buff, '\0', sizeof(buff)); //clears it after
+      std::cout << "File received! \n";
+      goto startlisten;
     }
     //if it doesnt contain null, we know that we're not end of the file, so we
     //write the full buffer into the file

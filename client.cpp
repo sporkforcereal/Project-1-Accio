@@ -102,8 +102,6 @@ main(int argc, char *argv[]){
   }//end of while loop
 
 
-
-
   //sets duration in seconds
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout<<"printf: "<< duration <<'\n';
