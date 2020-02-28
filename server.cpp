@@ -11,9 +11,8 @@
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
+#include <pthread.h>
 #define LENGTH 1024
-#include <thread>
-
 
 //METHODS
 //checks if the file exists
@@ -23,12 +22,34 @@ bool fileExists (const std::string& name) {
 }
 
 
+
+
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+char buffy[1024];
+
+//METHOD WE ARE MAKING
+void * socketThread(void *arg){//have it accept argv[2]
+  int newSocket = *((int *)arg);
+  recv(newSocket, buffy, 1024, 0);
+
+  pthread_mutex_lock(&lock);
+
+
+
+
+
+
+
+  pthread_mutex_unlock(&lock);
+  close(newSocket);
+  pthread_exit(NULL);
+}
+
+
+
 int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we're trying to save at
 {
   int portnum = atoi(argv[1]);
-
-
-
   // create a socket using TCP IP
   int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -52,6 +73,7 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
   }
 
   // set socket to listen status
+  startlisten:
   if (listen(sockfd, 1) == -1) {
     perror("listen");
     return 3;
@@ -72,8 +94,10 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
   std::cout << "Accept a connection from: " << ipstr << ":" <<
     ntohs(clientAddr.sin_port) << std::endl;
 
+////////////////////////////////////////////////////////////////////////////////
 
 
+////////////////////////////////////////////////////////////////////////////////
   //read/write data from/into the connection
   bool isEnd = false;
   char buff[LENGTH];
@@ -83,26 +107,20 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
 
   //makes a directory name save, not /save
   mkdir(dirname.c_str() + 1, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-
   int i = 1;
-  bool stop = true;
-
   std::string name = std::to_string(i); // which will be the number
-
   //starts with 1.file
   std::string halffile = name + ".file";
   //    fullfile =          /save   /       1     .file
   std::string fullfile = dirname + "/" + name + ".file"; //     /save/1.file
 
-  //std::ofstream writef;
-  while (stop){
-    if (!fileExists(fullfile)){//FOR SOME REASON IT DOESNT SEE THE EXIST
-      perror("IT DOESNT EXISTS");
-      //std::ofstream writef(fullfile.c_str() + 1, std::ios::binary); //creats the file
+
+  //checks if the file exists and name the next #.file name
+  while (1){
+    if (!fileExists(fullfile)){
       break;
     }
     else if (fileExists(fullfile)){//IF IT EXISTS ALREADY, INCREMENT THE COUNT AND RECHECK
-        perror("in da while loop!");
         i++;
         name = std::to_string(i);
         fullfile = dirname + "/" + name + ".file";
@@ -110,44 +128,54 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
   }
   i++;
 
-  //makes the file to write our binary data into, writef
+  //create the #.file
   std::ofstream writef(fullfile.c_str() + 1, std::ios::binary);
 
-
-  //char buf[LENGTH];
-
+  //this will write out to the file
   while (!isEnd) {
-
     memset(buff, '\0', sizeof(buff));
-
-
-
     int result = recv(clientSockfd, buff, LENGTH, 0);
 
-    //char buff[result];
-    //recv(clientSockfd, buff, sizeof(buff), 0);
-
-
+    //error checking
     if (result == -1) {
       perror("if result is -1");
       return 5;
     }
-
     else if (result == 0){
       perror("if result is 0");
       break;
     }
 
-    //std::cout << result;
+    //checks if buff has null
+    bool contains = false;
+    int count = 0;
+    for (int i = 0; i < 1024; i++){
+      if (buff[i] == '\0'){
+        std::cout << "THE NULL CHARACTER IS IN HERE!";
+        count = i;  //counts has the index where the null starts
+        contains = true;
+        break;
+      }
+    }
 
-    else{
-      writef.write(buff, sizeof(buff)); //this actually writes it out to the file
-    }//so after we get here, we have to keep it open and listen for new commands
-
+    //if it contains null, then we write special amount instead
+    if (contains){
+      char wbuff[count];
+      int i = 0;
+      for (i = 0; i < count; i++){
+        wbuff[i] = buff[i];
+        std::cout << wbuff[i];
+      }
+      writef.write(wbuff, sizeof(wbuff)); //this actually writes it out to the file
+    }
+    //if it doesnt contain null, we know that we're not end of the file, so we
+    //write the full buffer into the file
+    else if (!contains){
+      writef.write(buff, sizeof(buff));
+    }
   }//END OF WHILE LOOP
+  goto startlisten;
 
-  //if 10 seconds passed after the last transfer, then close
   close(clientSockfd);
-
   return 0;
 }

@@ -13,13 +13,25 @@
 
 #include <ctime>
 
+
+#include <netdb.h>
+
 using namespace std;
 
 #define LENGTH 1024
 
+
+//METHODS
+std::ifstream::pos_type filesize(const char* filename)
+{
+    std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
+    return in.tellg();
+}
+
 int
 main(int argc, char *argv[]){
 
+  struct hostent* server = gethostbyname(argv[1]);
 
   std::clock_t start;
   double duration;
@@ -35,7 +47,7 @@ main(int argc, char *argv[]){
   struct sockaddr_in serverAddr;
   serverAddr.sin_family = AF_INET;
   serverAddr.sin_port = htons(portnum);     // short, network byte order
-  serverAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  serverAddr.sin_addr.s_addr = *(long*)(server->h_addr_list[0]);
   memset(serverAddr.sin_zero, '\0', sizeof(serverAddr.sin_zero));
 
   // connect to the server
@@ -56,6 +68,8 @@ main(int argc, char *argv[]){
   std::cout << "Set up a connection from: " << ipstr << ":" <<
     ntohs(clientAddr.sin_port) << std::endl;
 
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
   bool isEnd = false;
   char buff[LENGTH];
@@ -63,18 +77,15 @@ main(int argc, char *argv[]){
   std::ifstream readf(argv[3], std::ios::binary); //reads it as binary into readf
 
   //so this while loop has to
-  while (!isEnd) {
 
+
+  while (!isEnd) {
     //make buffer size of the file
     //char buff[sizeof(readf)];
-
-    std::cout << sizeof(buff);
-
+    //std::cout << buff;
     memset(buff, '\0', sizeof(buff));//resets the buffer to null
-
     //
     readf.read(buff, sizeof(buff));
-
 
     //IF NOTHING HAVE BEEN READ IN, THEN WE BREAK OUT OF LOOP
     if (readf.gcount() == 0){
@@ -82,15 +93,21 @@ main(int argc, char *argv[]){
     }
 
     //this actually sends the data, the contents in line is getting sent
+
+
     if (send(sockfd, buff, sizeof(buff), 0) == -1) {
       perror("send");
       return 4;
-    }//IN THIS STATEMENT WE HAVE TO START THE TIMER!
+    }
+  }//end of while loop
 
-  }
-  
+
+
+
+  //sets duration in seconds
   duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
   std::cout<<"printf: "<< duration <<'\n';
+
   close(sockfd);
 
   return 0;
