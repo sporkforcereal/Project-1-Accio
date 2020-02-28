@@ -64,7 +64,7 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
   struct sockaddr_in addr;
   addr.sin_family = AF_INET;
   addr.sin_port = htons(portnum);     // short, network byte order
-  addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  addr.sin_addr.s_addr = INADDR_ANY;         //inet_addr("127.0.0.1");
   memset(addr.sin_zero, '\0', sizeof(addr.sin_zero));
 
   if (bind(sockfd, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])//argv[1] is for port argv[2] is for file-dir we
 
   // set socket to listen status
   startlisten:
-  if (listen(sockfd, 1) == -1) {
+  if (listen(sockfd, 10) == -1) {
     perror("listen");
     return 3;
   }
